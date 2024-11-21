@@ -7,7 +7,6 @@ import {
   Heading,
   Flex,
   View,
-  Image,
   Grid,
   Divider,
 } from "@aws-amplify/ui-react";
@@ -26,66 +25,72 @@ const client = generateClient({
   authMode: "userPool",
 });
 
+import * as pdfjsLib from "pdfjs-dist";
+
+
+// Set the workerSrc to the location of the pdf.js worker script
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js`;
+
 export default function App() {
-  const [notes, setNotes] = useState([]);
+  const [pdfs, setPdfs] = useState([]);
 
   useEffect(() => {
-    fetchNotes();
+    setPdfs([]);
   }, []);
 
-  async function fetchNotes() {
-    const { data: notes } = await client.models.Note.list();
-    await Promise.all(
-      notes.map(async (note) => {
-        if (note.image) {
-          const linkToStorageFile = await getUrl({
-            path: ({ identityId }) => `media/${identityId}/${note.image}`,
-          });
-          console.log(linkToStorageFile.url);
-          note.image = linkToStorageFile.url;
+  // Function to extract text from the PDF using pdf.js
+  async function extractTextFromPdf(file) {
+    const reader = new FileReader();
+
+    reader.onload = async function () {
+      const pdfData = new Uint8Array(reader.result);
+
+      try {
+        // Load the PDF document
+        const pdfDocument = await pdfjsLib.getDocument(pdfData).promise;
+
+        let fullText = "";
+        const numPages = pdfDocument.numPages;
+
+        // Iterate over each page and extract text
+        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+          const page = await pdfDocument.getPage(pageNum);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items
+            .map((item) => item.str)
+            .join(" ");
+          fullText += pageText + "\n";
         }
-        return note;
-      })
-    );
-    console.log(notes);
-    setNotes(notes);
+
+        // Log the extracted text to the console
+        console.log("Extracted PDF Text:", fullText);
+      } catch (error) {
+        console.error("Error extracting PDF text:", error);
+      }
+    };
+
+    reader.readAsArrayBuffer(file);
   }
 
-  async function createNote(event) {
+  // Handling the PDF file upload and processing
+  async function uploadPdf(event) {
     event.preventDefault();
     const form = new FormData(event.target);
-    console.log(form.get("image").name);
+    const file = form.get("pdf");
 
-    const { data: newNote } = await client.models.Note.create({
-      name: form.get("name"),
-      description: form.get("description"),
-      image: form.get("image").name,
-    });
+    // Log the name of the uploaded PDF
+    console.log("Uploaded PDF Name:", file.name);
 
-    console.log(newNote);
-    if (newNote.image)
-      if (newNote.image)
-        await uploadData({
-          path: ({ identityId }) => `media/${identityId}/${newNote.image}`,
+    // Extract and log text from the PDF
+    extractTextFromPdf(file);
 
-          data: form.get("image"),
-        }).result;
-
-    fetchNotes();
     event.target.reset();
   }
 
-  async function deleteNote({ id }) {
-    const toBeDeletedNote = {
-      id: id,
-    };
-
-    const { data: deletedNote } = await client.models.Note.delete(
-      toBeDeletedNote
-    );
-    console.log(deletedNote);
-
-    fetchNotes();
+  // Function to delete a PDF (if you want to manage local state or handle it differently)
+  async function deletePdf({ id }) {
+    const updatedPdfs = pdfs.filter((pdf) => pdf.id !== id);
+    setPdfs(updatedPdfs);
   }
 
   return (
@@ -99,8 +104,8 @@ export default function App() {
           width="70%"
           margin="0 auto"
         >
-          <Heading level={1}>My Notes App</Heading>
-          <View as="form" margin="3rem 0" onSubmit={createNote}>
+          <Heading level={1}>My PDF Uploader App</Heading>
+          <View as="form" margin="3rem 0" onSubmit={uploadPdf}>
             <Flex
               direction="column"
               justifyContent="center"
@@ -109,35 +114,26 @@ export default function App() {
             >
               <TextField
                 name="name"
-                placeholder="Note Name"
-                label="Note Name"
-                labelHidden
-                variation="quiet"
-                required
-              />
-              <TextField
-                name="description"
-                placeholder="Note Description"
-                label="Note Description"
+                placeholder="PDF Name"
+                label="PDF Name"
                 labelHidden
                 variation="quiet"
                 required
               />
               <View
-                name="image"
+                name="pdf"
                 as="input"
                 type="file"
                 alignSelf={"end"}
-                accept="image/png, image/jpeg"
+                accept="application/pdf"
               />
-
               <Button type="submit" variation="primary">
-                Create Note
+                Upload PDF
               </Button>
             </Flex>
           </View>
           <Divider />
-          <Heading level={2}>Current Notes</Heading>
+          <Heading level={2}>Uploaded PDFs</Heading>
           <Grid
             margin="3rem 0"
             autoFlow="column"
@@ -145,9 +141,9 @@ export default function App() {
             gap="2rem"
             alignContent="center"
           >
-            {notes.map((note) => (
+            {pdfs.map((pdf) => (
               <Flex
-                key={note.id || note.name}
+                key={pdf.id || pdf.name}
                 direction="column"
                 justifyContent="center"
                 alignItems="center"
@@ -158,21 +154,13 @@ export default function App() {
                 className="box"
               >
                 <View>
-                  <Heading level="3">{note.name}</Heading>
+                  <Heading level="3">{pdf.name}</Heading>
                 </View>
-                <Text fontStyle="italic">{note.description}</Text>
-                {note.image && (
-                  <Image
-                    src={note.image}
-                    alt={`visual aid for ${notes.name}`}
-                    style={{ width: 400 }}
-                  />
-                )}
                 <Button
                   variation="destructive"
-                  onClick={() => deleteNote(note)}
+                  onClick={() => deletePdf(pdf)}
                 >
-                  Delete note
+                  Delete PDF
                 </Button>
               </Flex>
             ))}
