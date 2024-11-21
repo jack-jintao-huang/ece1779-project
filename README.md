@@ -6,3 +6,11 @@ Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+
+# local dev steps
+- set aws local env variables from dashbord using AdministratorAccess profile
+- follow through account set up here https://docs.amplify.aws/react/start/account-setup/, from step 3
+- terminal: aws configure sso
+- terminal: npx ampx sandbox
+- new terminal instance: npm run dev
+- use link for local update 
