@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import "./shooting.css";
+
 import {
   Authenticator,
   Button,
@@ -94,6 +96,7 @@ export default function App() {
   }
 
   return (
+    
     <Authenticator>
       {({ signOut }) => (
         <Flex
@@ -104,7 +107,47 @@ export default function App() {
           width="70%"
           margin="0 auto"
         >
-          <Heading level={1}>My PDF Uploader App</Heading>
+
+        <Button
+          variation="link"
+          onClick={signOut}
+          style={{
+            position: 'absolute',
+            top: '1rem',
+            right: '1rem',
+            fontSize: '16px',
+            textDecoration: 'none',
+          }}
+        >
+          Sign Out
+        </Button>
+        
+
+        <Flex
+          className="App"
+          justifyContent="center"
+          alignItems="center"
+          direction="column"
+          width="100%"
+          height="100vh" // Full viewport height
+          margin="0 auto" >
+          <Heading level={1}>Welcome to the Document Extractor</Heading>
+          <Text>
+            Yerrrr         
+           </Text>
+          
+        </Flex>
+        <Divider />
+        
+        <Flex
+          className="App"
+          justifyContent="center"
+          alignItems="center"
+          direction="column"
+          width="100%"
+          height="100vh" // Full viewport height
+          margin="0 auto" >
+          <Heading level={2}>Upload Your PDF Here!</Heading>
           <View as="form" margin="3rem 0" onSubmit={uploadPdf}>
             <Flex
               direction="column"
@@ -132,6 +175,29 @@ export default function App() {
               </Button>
             </Flex>
           </View>
+        </Flex>
+        <Divider />
+        
+
+
+        {/* New Section: About This Project */}
+        <Flex
+          className="App"
+          justifyContent="center"
+          alignItems="center"
+          direction="column"
+          width="100%"
+          height="100vh" // Full viewport height
+          margin="0 auto" >
+        <Heading level={2}>About This Project</Heading>
+        <Text>
+            This project was developed by Dylan, Jack, Jay, and Arham, focusing on creating an easy and intuitive PDF uploading and processing extraction solution.
+          </Text>
+          <Text>
+            The goal is to provide a seamless user experience for uploading, processing, and extracting PDF information files for various applications.
+          </Text>
+        </Flex>
+                  
           <Divider />
           <Heading level={2}>Uploaded PDFs</Heading>
           <Grid
@@ -170,4 +236,9 @@ export default function App() {
       )}
     </Authenticator>
   );
+
+
+  
 }
+
+
