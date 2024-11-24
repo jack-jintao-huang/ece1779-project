@@ -37,8 +37,34 @@ export default function App() {
   const [pdfs, setPdfs] = useState([]);
 
   useEffect(() => {
-    setPdfs([]);
+    fetchPdfs();
   }, []);
+
+  async function fetchPdfs() {
+    const {data: pdfs} = await client.models.Pdf.list();
+
+    await Promise.all(
+      pdfs.map(async (pdf) => {
+        if (pdf.pdfUrl) {
+          const linkToStorageFile = await getUrl({
+            path: ({identityId}) => `pdf/${identityId}/${pdf.pdfUrl}`,
+          });
+          console.log("pdf url: " + linkToStorageFile);
+          pdf.pdfUrl = linkToStorageFile.url;
+        }
+        if(pdf.summaryUrl) {
+          const linkToStorageFile = await getUrl({
+            path: ({identityId}) => `summaries/${identityId}/${pdf.summaryUrl}`,
+          });
+          console.log("summary url: " + linkToStorageFile);
+          pdf.summaryUrl = linkToStorageFile.url;
+        }
+        return pdf;
+      })
+    );
+    console.log(pdfs);
+    setPdfs(pdfs);
+  }
 
   // Function to extract text from the PDF using pdf.js
   async function extractTextFromPdf(file) {
@@ -86,13 +112,35 @@ export default function App() {
     // Extract and log text from the PDF
     extractTextFromPdf(file);
 
+    const {data: newPdf} = await client.models.Pdf.create({
+      name: form.get("name"),
+      pdfUrl: file.name,
+    });
+
+    // Upload the PDF to the S3 bucket
+    const { key } = await uploadData({
+      path: ({ identityId }) => `pdf/${identityId}/${file.name}`,
+      data: file
+    });
+
+    console.log("New PDF:", newPdf);
+
+    // Fetch the updated list of PDFs
+    fetchPdfs();
+
     event.target.reset();
   }
 
   // Function to delete a PDF (if you want to manage local state or handle it differently)
   async function deletePdf({ id }) {
-    const updatedPdfs = pdfs.filter((pdf) => pdf.id !== id);
-    setPdfs(updatedPdfs);
+    const toBeDeleted = {
+      id: id,
+    };
+    const {data: deletedPdf} = await client.models.Pdf.delete(toBeDeleted);
+    console.log("Deleted PDF:", deletedPdf);
+
+    // Fetch the updated list of PDFs
+    fetchPdfs();
   }
 
   return (

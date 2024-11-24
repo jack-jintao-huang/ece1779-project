@@ -1,11 +1,11 @@
 import { type ClientSchema, a, defineData } from '@aws-amplify/backend';
 
 const schema = a.schema({
-  Note: a
+  Pdf: a
     .model({
-      name:a.string(),
-      description: a.string(),
-      image: a.string(),
+      name: a.string(),
+      pdfUrl: a.string(), // URL to the PDF file stored in S3
+      summary: a.string(),
     })
     .authorization((allow) => [allow.owner()]),
 });
