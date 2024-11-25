@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import "./shooting.css";
+import "./App.css";
 
 import {
   Authenticator,
@@ -29,7 +29,6 @@ const client = generateClient({
 
 import * as pdfjsLib from "pdfjs-dist";
 
-
 // Set the workerSrc to the location of the pdf.js worker script
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js`;
 
@@ -41,23 +40,22 @@ export default function App() {
   }, []);
 
   async function fetchPdfs() {
-    const {data: pdfs} = await client.models.Pdf.list();
+    const { data: pdfs } = await client.models.Pdf.list();
 
     await Promise.all(
       pdfs.map(async (pdf) => {
         if (pdf.pdfUrl) {
           const linkToStorageFile = await getUrl({
-            path: ({identityId}) => `pdf/${identityId}/${pdf.pdfUrl}`,
+            path: ({ identityId }) => `pdf/${identityId}/${pdf.pdfUrl}`,
           });
           console.log("pdf url: " + linkToStorageFile);
           pdf.pdfUrl = linkToStorageFile.url;
         }
-        if(pdf.summary) {
+        if (pdf.summary) {
           const linkToStorageFile = await getUrl({
-            path: ({identityId}) => `summaries/${identityId}/${pdf.summary}`,
+            path: ({ identityId }) => `summaries/${identityId}/${pdf.summary}`,
           });
-          console.log("summary url: " + linkToStorageFile);
-          pdf.summary = linkToStorageFile.url;
+          console.log("summary: " + pdf.summary);
         }
         return pdf;
       })
@@ -74,13 +72,10 @@ export default function App() {
       const pdfData = new Uint8Array(reader.result);
 
       try {
-        // Load the PDF document
         const pdfDocument = await pdfjsLib.getDocument(pdfData).promise;
-
         let fullText = "";
         const numPages = pdfDocument.numPages;
 
-        // Iterate over each page and extract text
         for (let pageNum = 1; pageNum <= numPages; pageNum++) {
           const page = await pdfDocument.getPage(pageNum);
           const textContent = await page.getTextContent();
@@ -90,7 +85,6 @@ export default function App() {
           fullText += pageText + "\n";
         }
 
-        // Log the extracted text to the console
         console.log("Extracted PDF Text:", fullText);
       } catch (error) {
         console.error("Error extracting PDF text:", error);
@@ -100,51 +94,44 @@ export default function App() {
     reader.readAsArrayBuffer(file);
   }
 
-  // Handling the PDF file upload and processing
   async function uploadPdf(event) {
     event.preventDefault();
     const form = new FormData(event.target);
     const file = form.get("pdf");
 
-    // Log the name of the uploaded PDF
     console.log("Uploaded PDF Name:", file.name);
 
-    // Extract and log text from the PDF
     extractTextFromPdf(file);
 
-    const {data: newPdf} = await client.models.Pdf.create({
+    const { data: newPdf } = await client.models.Pdf.create({
       name: form.get("name"),
       pdfUrl: file.name,
+      summary: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
     });
 
-    // Upload the PDF to the S3 bucket
     const { key } = await uploadData({
       path: ({ identityId }) => `pdf/${identityId}/${file.name}`,
-      data: file
+      data: file,
     });
 
     console.log("New PDF:", newPdf);
 
-    // Fetch the updated list of PDFs
     fetchPdfs();
 
     event.target.reset();
   }
 
-  // Function to delete a PDF (if you want to manage local state or handle it differently)
   async function deletePdf({ id }) {
     const toBeDeleted = {
       id: id,
     };
-    const {data: deletedPdf} = await client.models.Pdf.delete(toBeDeleted);
+    const { data: deletedPdf } = await client.models.Pdf.delete(toBeDeleted);
     console.log("Deleted PDF:", deletedPdf);
 
-    // Fetch the updated list of PDFs
     fetchPdfs();
   }
 
   return (
-    
     <Authenticator>
       {({ signOut }) => (
         <Flex
@@ -155,102 +142,76 @@ export default function App() {
           width="70%"
           margin="0 auto"
         >
+          <Button
+            onClick={signOut}
+            style={{
+              position: "fixed",
+              top: "1rem",
+              right: "1rem",
+              fontSize: "16px",
+              textDecoration: "none",
+            }}
+          >
+            Sign Out
+          </Button>
 
-        <Button
-          variation="link"
-          onClick={signOut}
-          style={{
-            position: 'absolute',
-            top: '1rem',
-            right: '1rem',
-            fontSize: '16px',
-            textDecoration: 'none',
-          }}
-        >
-          Sign Out
-        </Button>
-        
-
-        <Flex
-          className="App"
-          justifyContent="center"
-          alignItems="center"
-          direction="column"
-          width="100%"
-          height="100vh" // Full viewport height
-          margin="0 auto" >
-          <Heading level={1}>Welcome to the Document Extractor</Heading>
-          <Text>
-            Yerrrr         
-           </Text>
-          
-        </Flex>
-        <Divider />
-        
-        <Flex
-          className="App"
-          justifyContent="center"
-          alignItems="center"
-          direction="column"
-          width="100%"
-          height="100vh" // Full viewport height
-          margin="0 auto" >
-          <Heading level={2}>Upload Your PDF Here!</Heading>
-          <View as="form" margin="3rem 0" onSubmit={uploadPdf}>
-            <Flex
-              direction="column"
-              justifyContent="center"
-              gap="2rem"
-              padding="2rem"
-            >
-              <TextField
-                name="name"
-                placeholder="PDF Name"
-                label="PDF Name"
-                labelHidden
-                variation="quiet"
-                required
-              />
-              <View
-                name="pdf"
-                as="input"
-                type="file"
-                alignSelf={"end"}
-                accept="application/pdf"
-              />
-              <Button type="submit" variation="primary">
-                Upload PDF
-              </Button>
-            </Flex>
-          </View>
-        </Flex>
-        <Divider />
-        
-
-
-        {/* New Section: About This Project */}
-        <Flex
-          className="App"
-          justifyContent="center"
-          alignItems="center"
-          direction="column"
-          width="100%"
-          height="100vh" // Full viewport height
-          margin="0 auto" >
-        <Heading level={2}>About This Project</Heading>
-        <Text>
-            This project was developed by Dylan, Jack, Jay, and Arham, focusing on creating an easy and intuitive PDF uploading and processing extraction solution.
-          </Text>
-          <Text>
-            The goal is to provide a seamless user experience for uploading, processing, and extracting PDF information files for various applications.
-          </Text>
-        </Flex>
-                  
+          <Flex
+            className="App"
+            justifyContent="center"
+            alignItems="center"
+            direction="column"
+            width="100%"
+            height="20vh"
+            margin="0 auto"
+          >
+            <Heading level={1}>Welcome to the Contract Summarizer</Heading>
+          </Flex>
           <Divider />
-          <Heading level={2}>Uploaded PDFs</Heading>
+
+          <Flex
+            className="App"
+            justifyContent="center"
+            alignItems="center"
+            direction="column"
+            width="100%"
+            height="60vh"
+            margin="0 auto"
+          >
+            <Heading level={3}>Upload Your PDF Here!</Heading>
+            <View as="form" margin="3rem 0" onSubmit={uploadPdf}>
+              <Flex
+                direction="column"
+                justifyContent="center"
+                gap="2rem"
+                padding="2rem"
+              >
+                <TextField
+                  name="name"
+                  placeholder="PDF Name"
+                  label="PDF Name"
+                  labelHidden
+                  variation="quiet"
+                  required
+                />
+                <View
+                  name="pdf"
+                  as="input"
+                  type="file"
+                  alignSelf={"end"}
+                  accept="application/pdf"
+                />
+                <Button type="submit">
+                  Upload PDF
+                </Button>
+              </Flex>
+            </View>
+          </Flex>
+          <Divider />
+
+          <Heading level={3}>Uploaded PDFs</Heading>
           <Grid
             margin="3rem 0"
-            autoFlow="column"
+            autoFlow="col"
             justifyContent="center"
             gap="2rem"
             alignContent="center"
@@ -268,7 +229,10 @@ export default function App() {
                 className="box"
               >
                 <View>
-                  <Heading level="3">{pdf.name}</Heading>
+                  <Heading level="6">{pdf.name}</Heading>
+                </View>
+                <View>
+                  <Heading level="7">{pdf.summary}</Heading>
                 </View>
                 <Button
                   variation="destructive"
@@ -279,14 +243,30 @@ export default function App() {
               </Flex>
             ))}
           </Grid>
-          <Button onClick={signOut}>Sign Out</Button>
+
+          <Flex
+            className="App"
+            justifyContent="center"
+            alignItems="center"
+            direction="column"
+            width="100%"
+            height="40vh"
+            margin="0 auto"
+          >
+            <Heading level={2}>About This Project</Heading>
+            <Text>
+              This project was developed by Dylan, Jack, Jay, and Arham, focusing
+              on creating an easy and intuitive PDF uploading and processing
+              extraction solution.
+            </Text>
+            <Text>
+              The goal is to provide a seamless user experience for uploading,
+              processing, and extracting PDF information files for various
+              applications.
+            </Text>
+          </Flex>
         </Flex>
       )}
     </Authenticator>
   );
-
-
-  
 }
-
-

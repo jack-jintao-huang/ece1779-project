@@ -1,42 +1,138 @@
-#root {
-  max-width: 1280px;
+/* General Styles */
+:root {
+  --primary-color: #5a8a97; /* Muted teal for headings */
+  --secondary-color: #f7f9fc; /* Soft white for background */
+  --accent-color: #c6d9e3; /* Light pastel blue */
+  --highlight-color: #ecc9c3; /* Muted pastel peach for highlights */
+  --text-color: #404e5c; /* Neutral dark grey-blue for text */
+  --spacing-sm: 1rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 3rem;
+}
+
+body {
+  font-family: "Times New Roman", Georgia, serif;
+  background-color: var(--secondary-color);
+  color: var(--text-color);
+  margin: 0;
+  padding: 0;
+}
+
+/* Root Container */
+.App {
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: var(--spacing-md);
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
+/* Card Panels */
 .card {
-  padding: 2em;
+  background-color: var(--accent-color);
+  border: 1px solid var(--highlight-color);
+  border-radius: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-md);
+  width: 100%;
+  max-width: 900px;
+  margin-bottom: var(--spacing-md);
+  text-align: left;
 }
 
-.read-the-docs {
-  color: #888;
+/* Divider */
+hr, .divider {
+  border: none;
+  height: 1px;
+  background: var(--highlight-color);
+  margin: var(--spacing-md) 0;
+}
+
+/* Grid Layout for PDFs */
+.Grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+/* Individual Box Panels */
+.box {
+  background-color: var(--highlight-color);
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  padding: var(--spacing-sm);
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.3s, transform 0.3s ease-in-out;
+}
+
+.box:hover {
+  background-color: var(white);
+  transform: translateY(-4px);
+}
+
+/* Heading */
+h1, h2, h3 {
+  color: var(--primary-color);
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+}
+
+h3 {
+  font-size: 1.25rem;
+}
+
+/* Inputs */
+input, textarea {
+  width: 100%;
+  padding: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  border: 1px solid var(--text-color);
+  border-radius: 4px;
+  font-family: "Times New Roman", Georgia, serif;
+}
+
+input:focus, textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+}
+
+/* Buttons */
+button {
+  background-color: var(--accent-color);
+  color: var(--text-color);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .Grid {
+    grid-template-columns: 1fr;
+  }
+
+  button[style] {
+    font-size: 0.9rem;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+  }
 }
