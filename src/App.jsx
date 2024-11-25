@@ -34,6 +34,10 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
 
 export default function App() {
   const [pdfs, setPdfs] = useState([]);
+  const [extractedText, setExtractedText] = useState("");
+  const [pdfSummary, setPdfSummary] = useState(
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+  
 
   useEffect(() => {
     fetchPdfs();
@@ -83,7 +87,11 @@ export default function App() {
             .map((item) => item.str)
             .join(" ");
           fullText += pageText + "\n";
+          
         }
+        setExtractedText(fullText); // Update state with extracted text
+              setSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+
 
         console.log("Extracted PDF Text:", fullText);
       } catch (error) {
@@ -102,6 +110,11 @@ export default function App() {
     console.log("Uploaded PDF Name:", file.name);
 
     extractTextFromPdf(file);
+    await extractTextFromPdf(file); // Extract and set the text during upload
+
+    setPdfSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+
+
 
     const { data: newPdf } = await client.models.Pdf.create({
       name: form.get("name"),
@@ -206,8 +219,28 @@ export default function App() {
               </Flex>
             </View>
           </Flex>
-          <Divider />
+          {/* Placeholder Summary Section */}
+          <Flex 
+          direction="column" 
+          justifyContent="center" 
+          alignItems="center" 
+          gap="1rem" 
+          marginTop="3rem">
+          <Heading level={3}>Summary of Uploaded PDF</Heading>
 
+          <textarea
+        value={pdfSummary}
+        onChange={(e) => setPdfSummary(e.target.value)} // Update state when user edits
+        rows={10}
+        cols={50}
+        style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "5px", resize: "none" }}
+        />
+
+
+          </Flex>
+
+          <Divider />
+              
           <Heading level={3}>Uploaded PDFs</Heading>
           <Grid
             margin="3rem 0"
