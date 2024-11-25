@@ -52,12 +52,12 @@ export default function App() {
           console.log("pdf url: " + linkToStorageFile);
           pdf.pdfUrl = linkToStorageFile.url;
         }
-        if(pdf.summaryUrl) {
+        if(pdf.summary) {
           const linkToStorageFile = await getUrl({
-            path: ({identityId}) => `summaries/${identityId}/${pdf.summaryUrl}`,
+            path: ({identityId}) => `summaries/${identityId}/${pdf.summary}`,
           });
           console.log("summary url: " + linkToStorageFile);
-          pdf.summaryUrl = linkToStorageFile.url;
+          pdf.summary = linkToStorageFile.url;
         }
         return pdf;
       })
