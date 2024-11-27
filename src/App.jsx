@@ -1,43 +1,29 @@
 import { useState, useEffect } from "react";
 import "./App.css";
-
-import {
-  Authenticator,
-  Button,
-  Text,
-  TextField,
-  Heading,
-  Flex,
-  View,
-  Grid,
-  Divider,
-} from "@aws-amplify/ui-react";
+import { Authenticator, Button, Text, TextField, Heading, Flex, View, Grid, Divider } from "@aws-amplify/ui-react";
 import { Amplify } from "aws-amplify";
 import "@aws-amplify/ui-react/styles.css";
 import { getUrl } from "aws-amplify/storage";
 import { uploadData } from "aws-amplify/storage";
 import { generateClient } from "aws-amplify/data";
 import outputs from "../amplify_outputs.json";
-/**
- * @type {import('aws-amplify/data').Client<import('../amplify/data/resource').Schema>}
- */
+import * as pdfjsLib from "pdfjs-dist";
+
+// Set the workerSrc to the location of the pdf.js worker script
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js`;
 
 Amplify.configure(outputs);
 const client = generateClient({
   authMode: "userPool",
 });
 
-import * as pdfjsLib from "pdfjs-dist";
-
-// Set the workerSrc to the location of the pdf.js worker script
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js`;
-
 export default function App() {
   const [pdfs, setPdfs] = useState([]);
   const [extractedText, setExtractedText] = useState("");
   const [pdfSummary, setPdfSummary] = useState(
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
-  
+    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+  );
+  const [aiResponse, setAiResponse] = useState(""); // **Added state for storing AI response**
 
   useEffect(() => {
     fetchPdfs();
@@ -87,19 +73,55 @@ export default function App() {
             .map((item) => item.str)
             .join(" ");
           fullText += pageText + "\n";
-          
         }
         setExtractedText(fullText); // Update state with extracted text
         setPdfSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
 
-
         console.log("Extracted PDF Text:", fullText);
+        // Now call OpenAI API with the extracted text
+        await callOpenAI(fullText); // **Calling OpenAI with the extracted text**
       } catch (error) {
         console.error("Error extracting PDF text:", error);
       }
     };
 
     reader.readAsArrayBuffer(file);
+  }
+
+  // **Added callOpenAI function to handle OpenAI API request**
+  async function callOpenAI(pdfText) {
+    const prompt = `
+      You are an assistant tasked with parsing legal documents. For each document, extract the following:
+      Parties Involved: List the names of all parties (individuals, companies).
+      Key Clauses: Identify and extract important clauses, including:
+      - Confidentiality
+      - Indemnification
+      - Termination
+      Dates and Timelines: Extract key dates (contract start and end dates, deadlines).
+      Obligations and Liabilities: Summarize the obligations and liabilities of each party.
+      Summary: Provide a concise summary of the document’s key points.
+    `;
+
+    try {
+      const response = await fetch("https://api.openai.com/v1/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer YOUR_API_KEY`, // Add your OpenAI API key here
+        },
+        body: JSON.stringify({
+          model: "text-davinci-003", // Use your preferred model
+          prompt: prompt + "\n\n" + pdfText, // Combine prompt and extracted text
+          max_tokens: 500,
+        }),
+      });
+
+      const data = await response.json();
+      setAiResponse(data.choices[0].text.trim()); // **Updating AI response state with the result**
+      console.log("AI Response:", data.choices[0].text);
+    } catch (error) {
+      console.error("Error calling OpenAI:", error);
+    }
   }
 
   async function uploadPdf(event) {
@@ -110,11 +132,8 @@ export default function App() {
     console.log("Uploaded PDF Name:", file.name);
 
     extractTextFromPdf(file);
-    await extractTextFromPdf(file); // Extract and set the text during upload
 
     setPdfSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
-
-
 
     const { data: newPdf } = await client.models.Pdf.create({
       name: form.get("name"),
@@ -220,27 +239,22 @@ export default function App() {
             </View>
           </Flex>
           {/* Placeholder Summary Section */}
-          <Flex 
-          direction="column" 
-          justifyContent="center" 
-          alignItems="center" 
-          gap="1rem" 
-          marginTop="3rem">
-          <Heading level={3}>Summary of Uploaded PDF</Heading>
-
-          <textarea
-        value={pdfSummary}
-        onChange={(e) => setPdfSummary(e.target.value)} // Update state when user edits
-        rows={10}
-        cols={50}
-        style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "5px", resize: "none" }}
-        />
-
-
+          <Flex direction="column" justifyContent="center" alignItems="center" gap="1rem" marginTop="3rem">
+            <Heading level={3}>Summary of Uploaded PDF</Heading>
+            <textarea
+              value={pdfSummary}
+              onChange={(e) => setPdfSummary(e.target.value)} // Update state when user edits
+              rows={10}
+              cols={50}
+              style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "5px", resize: "none" }}
+            />
           </Flex>
 
           <Divider />
-              
+          <Heading level={3}>AI Response</Heading>
+          <Text>{aiResponse}</Text> {/* **Displaying the AI response** */}
+
+          <Divider />
           <Heading level={3}>Uploaded PDFs</Heading>
           <Grid
             margin="3rem 0"
@@ -257,47 +271,14 @@ export default function App() {
                 alignItems="center"
                 gap="2rem"
                 border="1px solid #ccc"
-                padding="2rem"
-                borderRadius="5%"
-                className="box"
+                padding="1rem"
+                borderRadius="5px"
               >
-                <View>
-                  <Heading level="6">{pdf.name}</Heading>
-                </View>
-                <View>
-                  <Heading level="7">{pdf.summary}</Heading>
-                </View>
-                <Button
-                  variation="destructive"
-                  onClick={() => deletePdf(pdf)}
-                >
-                  Delete PDF
-                </Button>
+                <Text>{pdf.name}</Text>
+                <Button onClick={() => deletePdf(pdf)}>Delete</Button>
               </Flex>
             ))}
           </Grid>
-
-          <Flex
-            className="App"
-            justifyContent="center"
-            alignItems="center"
-            direction="column"
-            width="100%"
-            height="40vh"
-            margin="0 auto"
-          >
-            <Heading level={2}>About This Project</Heading>
-            <Text>
-              This project was developed by Dylan, Jack, Jay, and Arham, focusing
-              on creating an easy and intuitive PDF uploading and processing
-              extraction solution.
-            </Text>
-            <Text>
-              The goal is to provide a seamless user experience for uploading,
-              processing, and extracting PDF information files for various
-              applications.
-            </Text>
-          </Flex>
         </Flex>
       )}
     </Authenticator>
