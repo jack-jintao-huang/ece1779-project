@@ -228,19 +228,21 @@ export default function App() {
           marginTop="3rem">
           <Heading level={3}>Summary of Uploaded PDF</Heading>
 
-          <textarea
-        value={pdfSummary}
-        onChange={(e) => setPdfSummary(e.target.value)} // Update state when user edits
-        rows={10}
-        cols={50}
-        style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "5px", resize: "none" }}
-        />
-
-
+          <View
+            style={{
+              padding: "10px",
+              border: "1px solid #ccc",
+              borderRadius: "5px",
+              backgroundColor: "#f9f9f9",
+              maxWidth: "80%",
+              textAlign: "justify",
+              lineHeight: "1.6",
+            }}
+            >
+              {pdfSummary}
+         </View>
           </Flex>
-
-          <Divider />
-              
+          <Divider />  
           <Heading level={3}>Uploaded PDFs</Heading>
           <Grid
             margin="3rem 0"
@@ -267,12 +269,34 @@ export default function App() {
                 <View>
                   <Heading level="7">{pdf.summary}</Heading>
                 </View>
-                <Button
-                  variation="destructive"
-                  onClick={() => deletePdf(pdf)}
-                >
-                  Delete PDF
-                </Button>
+                <Flex direction="row" gap="1rem">
+              <Button
+                onClick={() => window.open(pdf.pdfUrl, "_blank")}
+                variation="primary"
+              >
+                View
+              </Button>
+              <Button
+                onClick={() => {
+                  const link = document.createElement("a");
+                  link.href = pdf.pdfUrl;
+                  link.download = pdf.name || "download.pdf";
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                variation="secondary"
+              >
+                Download
+              </Button>
+              </Flex>
+              <Button
+                variation="destructive"
+                onClick={() => deletePdf(pdf)}
+              >
+                Delete PDF
+              </Button>
+
               </Flex>
             ))}
           </Grid>
