@@ -18,6 +18,7 @@ import { getUrl } from "aws-amplify/storage";
 import { uploadData } from "aws-amplify/storage";
 import { generateClient } from "aws-amplify/data";
 import outputs from "../amplify_outputs.json";
+import axios from "axios"; // Import axios for making API calls
 /**
  * @type {import('aws-amplify/data').Client<import('../amplify/data/resource').Schema>}
  */
@@ -37,6 +38,7 @@ export default function App() {
   const [extractedText, setExtractedText] = useState("");
   const [pdfSummary, setPdfSummary] = useState(
     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+  const [processedText, setProcessedText] = useState(""); // State for storing processed text
   
 
   useEffect(() => {
@@ -144,6 +146,43 @@ export default function App() {
     fetchPdfs();
   }
 
+  // New function to call OpenAI for processing the text
+  async function processText() {
+    const openAiApiKey = "YOUR_API_KEY_HERE"; // Replace with your OpenAI API key
+    const prompt = `
+      You are an assistant tasked with parsing legal documents. For each document, extract the following:
+      Parties Involved: List the names of all parties (individuals, companies).
+      Key Clauses: Identify and extract important clauses, including:
+      - Confidentiality
+      - Indemnification
+      - Termination
+      Dates and Timelines: Extract key dates (contract start and end dates, deadlines).
+      Obligations and Liabilities: Summarize the obligations and liabilities of each party.
+      Summary: Provide a concise summary of the document’s key points.
+    `;
+
+    try {
+      const response = await axios.post(
+        "https://api.openai.com/v1/completions",
+        {
+          model: "gpt-4o", // You can use other models here
+          prompt: prompt + "\n" + extractedText,
+          max_tokens: 100,
+          temperature: 0.7,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${openAiApiKey}`,
+          },
+        }
+      );
+      setProcessedText(response.data.choices[0].text); // Set processed text in state
+    } catch (error) {
+      console.error("Error processing text:", error);
+    }
+  }
+
+
   return (
     <Authenticator>
       {({ signOut }) => (
@@ -243,6 +282,61 @@ export default function App() {
          </View>
           </Flex>
           <Divider />  
+
+          {/* Full Extracted Text Section */}
+          <Flex
+            direction="column"
+            justifyContent="center"
+            alignItems="center"
+            gap="1rem"
+            marginTop="3rem"
+          >
+            <Heading level={3}>Full Extracted Text</Heading>
+            <View
+              style={{
+                padding: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "5px",
+                backgroundColor: "#f9f9f9",
+                maxWidth: "80%",
+                textAlign: "justify",
+                lineHeight: "1.6",
+                height: "200px",
+                overflowY: "scroll",
+              }}
+            >
+              {extractedText}
+            </View>
+            <Button onClick={processText}>Process Text</Button>
+          </Flex>
+
+          {/* Processed Text Section */}
+          <Flex
+            direction="column"
+            justifyContent="center"
+            alignItems="center"
+            gap="1rem"
+            marginTop="3rem"
+          >
+            <Heading level={3}>Processed Text</Heading>
+            <View
+              style={{
+                padding: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "5px",
+                backgroundColor: "#f9f9f9",
+                maxWidth: "80%",
+                textAlign: "justify",
+                lineHeight: "1.6",
+                height: "200px",
+                overflowY: "scroll",
+              }}
+            >
+              {processedText ? processedText : "No processed text yet."}
+            </View>
+          </Flex>
+          <Divider />  
+
           <Heading level={3}>Uploaded PDFs</Heading>
           <Grid
             margin="3rem 0"
