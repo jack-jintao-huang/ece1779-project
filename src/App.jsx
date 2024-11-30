@@ -153,7 +153,7 @@ export default function App() {
     }
     // for testing purposes
     const textFragment = extractedText.substring(0, 100);
-    const API_KEY = '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';
+    const API_KEY = 'PLACEHOLD';
 
     try {
       const response = await axios.post(
