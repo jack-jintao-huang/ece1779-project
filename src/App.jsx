@@ -18,6 +18,7 @@ import { getUrl } from "aws-amplify/storage";
 import { uploadData } from "aws-amplify/storage";
 import { generateClient } from "aws-amplify/data";
 import outputs from "../amplify_outputs.json";
+import axios from "axios"
 /**
  * @type {import('aws-amplify/data').Client<import('../amplify/data/resource').Schema>}
  */
@@ -144,6 +145,11 @@ export default function App() {
     fetchPdfs();
   }
 
+  // placeholder for api call
+  async function processText() {
+    console.log("Text processed");
+  }
+
   return (
     <Authenticator>
       {({ signOut }) => (
@@ -266,8 +272,24 @@ export default function App() {
                 whiteSpace: "pre-wrap", // Ensures proper formatting of line breaks in extracted text
               }}
             >
-              {extractedText}
+              {/* Display a shortened version of the text */}
+              {extractedText
+                ? extractedText.substring(0, 200) + (extractedText.length > 200 ? "..." : "")
+                : "No text extracted yet."}
             </View>
+
+            {/* placeholder for API call */}
+            <Button 
+              onClick={processText} // Call processText when clicked
+              style={{
+                marginTop: "1rem",
+                padding: "10px 20px",
+                fontSize: "16px",
+              }}
+            >
+              Process Text
+            </Button>
+            
           </Flex>
 
           <Divider />  
