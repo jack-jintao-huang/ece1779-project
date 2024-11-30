@@ -221,28 +221,31 @@ export default function App() {
           </Flex>
           {/* Placeholder Summary Section */}
           <Flex 
-          direction="column" 
-          justifyContent="center" 
-          alignItems="center" 
-          gap="1rem" 
-          marginTop="3rem">
-          <Heading level={3}>Summary of Uploaded PDF</Heading>
+            direction="column" 
+            justifyContent="center" 
+            alignItems="center" 
+            gap="1rem" 
+            marginTop="3rem"
+          >
+            <Heading level={3}>Summary of Uploaded PDF</Heading>
 
-          <View
-            style={{
-              padding: "10px",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              backgroundColor: "#f9f9f9",
-              maxWidth: "80%",
-              textAlign: "justify",
-              lineHeight: "1.6",
-            }}
-            >
-              {pdfSummary}
-         </View>
+            <View
+              style={{
+                padding: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "5px",
+                backgroundColor: "#f9f9f9",
+                maxWidth: "80%",
+                textAlign: "justify",
+                lineHeight: "1.6",
+                }}
+              >
+                {pdfSummary}
+            </View>
           </Flex>
+
           <Divider />  
+          
           <Heading level={3}>Uploaded PDFs</Heading>
           <Grid
             margin="3rem 0"
