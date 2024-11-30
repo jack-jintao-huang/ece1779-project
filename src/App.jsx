@@ -30,7 +30,7 @@ const client = generateClient({
 import * as pdfjsLib from "pdfjs-dist";
 
 // Set the workerSrc to the location of the pdf.js worker script
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js`;
 
 export default function App() {
   const [pdfs, setPdfs] = useState([]);
@@ -244,8 +244,34 @@ export default function App() {
             </View>
           </Flex>
 
+          {/* Placeholder Extracted Text */}
+          <Flex 
+            direction="column" 
+            justifyContent="center" 
+            alignItems="center" 
+            gap="1rem" 
+            marginTop="3rem"
+          >
+            <Heading level={3}>Extracted Text</Heading>
+
+            <View
+              style={{
+                padding: "10px",
+                border: "1px solid #ccc",
+                borderRadius: "5px",
+                backgroundColor: "#f3f3f3",
+                maxWidth: "80%",
+                textAlign: "justify",
+                lineHeight: "1.6",
+                whiteSpace: "pre-wrap", // Ensures proper formatting of line breaks in extracted text
+              }}
+            >
+              {extractedText}
+            </View>
+          </Flex>
+
           <Divider />  
-          
+
           <Heading level={3}>Uploaded PDFs</Heading>
           <Grid
             margin="3rem 0"
