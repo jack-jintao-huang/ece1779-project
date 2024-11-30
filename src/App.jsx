@@ -145,9 +145,40 @@ export default function App() {
     fetchPdfs();
   }
 
-  // placeholder for api call
+  //openAI api call ref: https://dev.to/jehnz/integrating-openai-api-with-a-react-application-3378
   async function processText() {
-    console.log("Text processed");
+    if (!extractedText) {
+      console.error("No text extracted to process:", error)
+      return;
+    }
+    // for testing purposes
+    const textFragment = extractedText.substring(0, 100);
+    const API_KEY = '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';
+
+    try {
+      const response = await axios.post(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          model: "gpt-4",
+          messages: [
+            {role: "system", content: "You are a legal assistant."},
+            {role: "user", content: `Summarize teh following text:\n\n"${textFragment}"`}
+          ],
+          max_tokens: 100,
+          temperature: 0.7
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${API_KEY}`,
+          },
+        }
+      );
+      const processedText = response.data.choices[0].message.content.trim();
+      console.log("Processed Text:", processedText);
+    } catch (error) {
+      console.error("Error processing OpenAI request:", error.response ? error.response.data : error.message);
+    }
   }
 
   return (
@@ -274,7 +305,7 @@ export default function App() {
             >
               {/* Display a shortened version of the text */}
               {extractedText
-                ? extractedText.substring(0, 200) + (extractedText.length > 200 ? "..." : "")
+                ? extractedText.substring(0, 100) + (extractedText.length > 100 ? "..." : "")
                 : "No text extracted yet."}
             </View>
 
