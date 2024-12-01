@@ -36,8 +36,14 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
 export default function App() {
   const [pdfs, setPdfs] = useState([]);
   const [extractedText, setExtractedText] = useState("");
-  const [pdfSummary, setPdfSummary] = useState(
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+  const [pdfSummary, setPdfSummary] = useState("");
+  const [parsedCategories, setParsedCategories] = useState({
+    partiesInvolved: "",
+    keyClauses: "",
+    datesAndTimelines: "",
+    obligationsAndLiabilities: "",
+    summary: "",
+  });
   
 
   useEffect(() => {
@@ -91,7 +97,7 @@ export default function App() {
           
         }
         setExtractedText(fullText); // Update state with extracted text
-        setPdfSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+        // setPdfSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
 
 
         console.log("Extracted PDF Text:", fullText);
@@ -113,7 +119,7 @@ export default function App() {
     extractTextFromPdf(file);
     await extractTextFromPdf(file); // Extract and set the text during upload
 
-    setPdfSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+    // setPdfSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
 
 
 
@@ -152,8 +158,7 @@ export default function App() {
       return;
     }
     // for testing purposes
-    const textFragment = extractedText.substring(0, 100);
-    const API_KEY = 'PLACEHOLD';
+    const API_KEY = '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';
 
     try {
       const response = await axios.post(
@@ -161,10 +166,30 @@ export default function App() {
         {
           model: "gpt-4",
           messages: [
-            {role: "system", content: "You are a legal assistant."},
-            {role: "user", content: `Summarize teh following text:\n\n"${textFragment}"`}
+            { role: "system",
+              content: "You are a legal assistant trained to analyze and process legal documents."
+            },
+            { role: "user",
+              content: `Analyze the following legal document text and extract the required details efficiently and concisely:
+              1. Parties Involved: List the names of all parties mentioned in the document.
+              2. Key Clauses: Summarize the following clauses in 1 sentence each:
+              - Confidentiality
+              - Indemnification
+              - Termination
+              - Liability and obligations
+              - Dispute resolution
+              3. Dates and Timelines: Extract all relevant dates and timelines, including:
+              - Start and end dates of the contract
+              - Deadlines for obligations or deliverables
+              - Renewal or termination dates
+              4. Obligations and Liabilities: Summarize the main obligations and liabilities of each party in 1 sentence each.
+              5. Summary: Provide a concise summary of the document's key points, including purpose, scope, and any other critical terms in 2-3 sentences.
+
+              Document Text:
+              ${extractedText}`,
+            },
           ],
-          max_tokens: 100,
+          max_tokens: 1000,
           temperature: 0.7
         },
         {
@@ -174,12 +199,47 @@ export default function App() {
           },
         }
       );
-      const processedText = response.data.choices[0].message.content.trim();
-      console.log("Processed Text:", processedText);
+
+      // extract response
+      const modelResponse = response.data.choices[0].message.content.trim();
+      console.log("Model Response: \n", modelResponse);
+
+      // parsed response
+      const parsedResponse = parseResponse(modelResponse);
+      setPdfSummary(parsedResponse.summary || "No summary available.");
+      setParsedCategories(parsedResponse);
+
     } catch (error) {
       console.error("Error processing OpenAI request:", error.response ? error.response.data : error.message);
     }
   }
+
+  // parse response into categories
+  function parseResponse(response) {
+    const sections = {
+      partiesInvolved: extractSection(response, "1\\. Parties Involved"),
+      keyClauses: extractSection(response, "2\\. Key Clauses"),
+      datesAndTimelines: extractSection(response, "3\\. Dates and Timelines"),
+      obligationsAndLiabilities: extractSection(
+        response,
+        "4\\. Obligations and Liabilities"
+      ),
+      summary: extractSection(response, "5\\. Summary"),
+    };
+  
+    return sections;
+  }
+  
+  // Helper function to extract specific sections
+  function extractSection(text, sectionName) {
+    // Matches text for the given section name until the next numbered section
+    const regex = new RegExp(
+      `${sectionName}:([\\s\\S]*?)(?=\\n\\d\\. |$)`, // Match from sectionName until the next numbered heading or the end of text
+      "i"
+    );
+    const match = text.match(regex);
+    return match ? match[1] : "No information available.";
+  }  
 
   return (
     <Authenticator>
@@ -321,6 +381,37 @@ export default function App() {
               Process Text
             </Button>
             
+          </Flex>
+
+          <Flex direction="column" justifyContent="center" alignItems="center" gap="1rem" marginTop="3rem">
+            <Heading level={3}>Detailed Analysis</Heading>
+
+            <View style={{ padding: "10px", border: "1px solid #ccc", borderRadius: "5px", backgroundColor: "#f9f9f9", maxWidth: "80%", textAlign: "justify", lineHeight: "1.6" }}>
+              <Text>
+                <strong>Parties Involved:</strong> <br />
+                {parsedCategories.partiesInvolved || "No information available."}
+              </Text>
+              <Divider />
+              <Text>
+                <strong>Key Clauses:</strong> <br />
+                {parsedCategories.keyClauses || "No information available."}
+              </Text>
+              <Divider />
+              <Text>
+                <strong>Dates and Timelines:</strong> <br />
+                {parsedCategories.datesAndTimelines || "No information available."}
+              </Text>
+              <Divider />
+              <Text>
+                <strong>Obligations and Liabilities:</strong> <br />
+                {parsedCategories.obligationsAndLiabilities || "No information available."}
+              </Text>
+              <Divider />
+              <Text>
+                <strong>Summary:</strong> <br />
+                {parsedCategories.summary || "No summary available."}
+              </Text>
+            </View>
           </Flex>
 
           <Divider />  
