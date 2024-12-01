@@ -97,8 +97,6 @@ export default function App() {
           
         }
         setExtractedText(fullText); // Update state with extracted text
-        // setPdfSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
-
 
         console.log("Extracted PDF Text:", fullText);
       } catch (error) {
@@ -118,15 +116,12 @@ export default function App() {
 
     extractTextFromPdf(file);
     await extractTextFromPdf(file); // Extract and set the text during upload
-
-    // setPdfSummary("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
-
-
+    await processText();
 
     const { data: newPdf } = await client.models.Pdf.create({
       name: form.get("name"),
       pdfUrl: file.name,
-      summary: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
+      summary: pdfSummary || "No summary generated.",
     });
 
     const { key } = await uploadData({
@@ -158,7 +153,7 @@ export default function App() {
       return;
     }
     // for testing purposes
-    const API_KEY = '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';
+    const API_KEY = 'PLACEHOLD';
 
     try {
       const response = await axios.post(
@@ -339,48 +334,6 @@ export default function App() {
               >
                 {pdfSummary}
             </View>
-          </Flex>
-
-          {/* Placeholder Extracted Text */}
-          <Flex 
-            direction="column" 
-            justifyContent="center" 
-            alignItems="center" 
-            gap="1rem" 
-            marginTop="3rem"
-          >
-            <Heading level={3}>Extracted Text</Heading>
-
-            <View
-              style={{
-                padding: "10px",
-                border: "1px solid #ccc",
-                borderRadius: "5px",
-                backgroundColor: "#f3f3f3",
-                maxWidth: "80%",
-                textAlign: "justify",
-                lineHeight: "1.6",
-                whiteSpace: "pre-wrap", // Ensures proper formatting of line breaks in extracted text
-              }}
-            >
-              {/* Display a shortened version of the text */}
-              {extractedText
-                ? extractedText.substring(0, 100) + (extractedText.length > 100 ? "..." : "")
-                : "No text extracted yet."}
-            </View>
-
-            {/* placeholder for API call */}
-            <Button 
-              onClick={processText} // Call processText when clicked
-              style={{
-                marginTop: "1rem",
-                padding: "10px 20px",
-                fontSize: "16px",
-              }}
-            >
-              Process Text
-            </Button>
-            
           </Flex>
 
           <Flex direction="column" justifyContent="center" alignItems="center" gap="1rem" marginTop="3rem">
