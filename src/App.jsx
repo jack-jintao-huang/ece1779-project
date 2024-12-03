@@ -66,13 +66,14 @@ export default function App() {
           const linkToStorageFile = await getUrl({
             path: ({ identityId }) => `summaries/${identityId}/${pdf.summary}`,
           });
-          // console.log("summary: " + pdf.summary);
+          
+          console.log("summary: " + pdf.summary);
         }
         return pdf;
       })
     );
     // console.log(pdfs);
-    /// setPdfs(pdfs);
+    setPdfs(pdfs);
   }
 
   // Function to extract text from the PDF using pdf.js
@@ -167,7 +168,7 @@ export default function App() {
       return;
     }
     // for testing purposes
-    const API_KEY = 'PLACEHOLD';
+    const API_KEY = 'PLACEHOLDER';
 
     try {
       const response = await axios.post(
