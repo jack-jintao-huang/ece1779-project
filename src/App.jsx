@@ -59,52 +59,57 @@ export default function App() {
           const linkToStorageFile = await getUrl({
             path: ({ identityId }) => `pdf/${identityId}/${pdf.pdfUrl}`,
           });
-          console.log("pdf url: " + linkToStorageFile);
+          // console.log("pdf url: " + linkToStorageFile);
           pdf.pdfUrl = linkToStorageFile.url;
         }
         if (pdf.summary) {
           const linkToStorageFile = await getUrl({
             path: ({ identityId }) => `summaries/${identityId}/${pdf.summary}`,
           });
-          console.log("summary: " + pdf.summary);
+          // console.log("summary: " + pdf.summary);
         }
         return pdf;
       })
     );
-    console.log(pdfs);
-    setPdfs(pdfs);
+    // console.log(pdfs);
+    /// setPdfs(pdfs);
   }
 
   // Function to extract text from the PDF using pdf.js
   async function extractTextFromPdf(file) {
     const reader = new FileReader();
-
-    reader.onload = async function () {
-      const pdfData = new Uint8Array(reader.result);
-
-      try {
-        const pdfDocument = await pdfjsLib.getDocument(pdfData).promise;
-        let fullText = "";
-        const numPages = pdfDocument.numPages;
-
-        for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-          const page = await pdfDocument.getPage(pageNum);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items
-            .map((item) => item.str)
-            .join(" ");
-          fullText += pageText + "\n";
-          
+    return new Promise((resolve, reject) => {
+      reader.onload = async function () {
+        const pdfData = new Uint8Array(reader.result);
+  
+        try {
+          const pdfDocument = await pdfjsLib.getDocument(pdfData).promise;
+          let fullText = "";
+          const numPages = pdfDocument.numPages;
+  
+          for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+            const page = await pdfDocument.getPage(pageNum);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items
+              .map((item) => item.str)
+              .join(" ");
+            fullText += pageText + "\n";
+          }
+  
+          console.log("Extracted PDF Text:", fullText);
+          resolve(fullText);  // Resolve the promise with the full extracted text
+        } catch (error) {
+          console.error("Error extracting PDF text:", error);
+          reject("Error extracting PDF text: " + error.message);  // Reject the promise in case of an error
         }
-        setExtractedText(fullText); // Update state with extracted text
-
-        console.log("Extracted PDF Text:", fullText);
-      } catch (error) {
-        console.error("Error extracting PDF text:", error);
-      }
-    };
-
-    reader.readAsArrayBuffer(file);
+      };
+  
+      reader.onerror = function (error) {
+        reject("File reading error: " + error);  // Reject if file reading fails
+      };
+  
+      reader.readAsArrayBuffer(file);  // Start reading the file
+    });
   }
 
   async function uploadPdf(event) {
@@ -112,11 +117,20 @@ export default function App() {
     const form = new FormData(event.target);
     const file = form.get("pdf");
 
-    console.log("Uploaded PDF Name:", file.name);
+    // console.log("Uploaded PDF Name:", file.name);
 
-    extractTextFromPdf(file);
-    await extractTextFromPdf(file); // Extract and set the text during upload
-    await processText();
+
+    const text = await extractTextFromPdf(file); // Extract and set the text during upload
+    
+    console.log("========", text)
+
+    // If text extraction fails or returns empty, handle it gracefully
+    if (!text) {
+      console.error("Failed to extract text from PDF");
+      return;
+    }
+
+    await processText(text);
 
     const { data: newPdf } = await client.models.Pdf.create({
       name: form.get("name"),
@@ -141,14 +155,14 @@ export default function App() {
       id: id,
     };
     const { data: deletedPdf } = await client.models.Pdf.delete(toBeDeleted);
-    console.log("Deleted PDF:", deletedPdf);
+    // console.log("Deleted PDF:", deletedPdf);
 
     fetchPdfs();
   }
 
   //openAI api call ref: https://dev.to/jehnz/integrating-openai-api-with-a-react-application-3378
-  async function processText() {
-    if (!extractedText) {
+  async function processText(text) {
+    if (!text) {
       console.error("No text extracted to process:", error)
       return;
     }
@@ -181,7 +195,7 @@ export default function App() {
               5. Summary: Provide a concise summary of the document's key points, including purpose, scope, and any other critical terms in 2-3 sentences.
 
               Document Text:
-              ${extractedText}`,
+              ${text}`,
             },
           ],
           max_tokens: 1000,
