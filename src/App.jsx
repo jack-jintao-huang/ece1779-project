@@ -99,6 +99,7 @@ export default function App() {
         setExtractedText(fullText); // Update state with extracted text
 
         console.log("Extracted PDF Text:", fullText);
+        return fullText;
       } catch (error) {
         console.error("Error extracting PDF text:", error);
       }
@@ -114,9 +115,8 @@ export default function App() {
 
     console.log("Uploaded PDF Name:", file.name);
 
-    extractTextFromPdf(file);
-    await extractTextFromPdf(file); // Extract and set the text during upload
-    await processText();
+    fullText = await extractTextFromPdf(file); // Extract and set the text during upload
+    await processText(fullText);
 
     const { data: newPdf } = await client.models.Pdf.create({
       name: form.get("name"),
@@ -147,7 +147,7 @@ export default function App() {
   }
 
   //openAI api call ref: https://dev.to/jehnz/integrating-openai-api-with-a-react-application-3378
-  async function processText() {
+  async function processText(fullText) {
     if (!extractedText) {
       console.error("No text extracted to process:", error)
       return;
