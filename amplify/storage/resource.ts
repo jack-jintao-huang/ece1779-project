@@ -5,9 +5,6 @@ export const storage = defineStorage({
   access: (allow) => ({
     "pdf/{entity_id}/*": [
       allow.entity("identity").to(["read", "write", "delete"]),
-    ],
-    "summaries/{entity_id}/*": [
-      allow.entity("identity").to(["read", "write", "delete"]),
-    ],
+    ]
   }),
 });

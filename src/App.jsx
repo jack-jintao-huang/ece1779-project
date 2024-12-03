@@ -35,7 +35,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
 
 export default function App() {
   const [pdfs, setPdfs] = useState([]);
-  const [extractedText, setExtractedText] = useState("");
   const [pdfSummary, setPdfSummary] = useState("");
   const [parsedCategories, setParsedCategories] = useState({
     partiesInvolved: "",
@@ -62,17 +61,10 @@ export default function App() {
           // console.log("pdf url: " + linkToStorageFile);
           pdf.pdfUrl = linkToStorageFile.url;
         }
-        if (pdf.summary) {
-          const linkToStorageFile = await getUrl({
-            path: ({ identityId }) => `summaries/${identityId}/${pdf.summary}`,
-          });
-          
-          console.log("summary: " + pdf.summary);
-        }
         return pdf;
       })
     );
-    // console.log(pdfs);
+    console.log(pdfs);
     setPdfs(pdfs);
   }
 
@@ -131,15 +123,21 @@ export default function App() {
       return;
     }
 
-    await processText(text);
+    const parsed = await processText(text);
+
+    console.log("Parsed Categories:", parsed);
 
     const { data: newPdf } = await client.models.Pdf.create({
       name: form.get("name"),
       pdfUrl: file.name,
       summary: pdfSummary || "No summary generated.",
+      partiesInvolved: parsed.partiesInvolved || "No information available.",
+      keyClauses: parsed.keyClauses || "No information available.",
+      datesAndTimelines: parsed.datesAndTimelines || "No information available.",
+      obligationsAndLiabilities: parsed.obligationsAndLiabilities || "No information available.",
     });
 
-    const { key } = await uploadData({
+    await uploadData({
       path: ({ identityId }) => `pdf/${identityId}/${file.name}`,
       data: file,
     });
@@ -156,7 +154,7 @@ export default function App() {
       id: id,
     };
     const { data: deletedPdf } = await client.models.Pdf.delete(toBeDeleted);
-    // console.log("Deleted PDF:", deletedPdf);
+    console.log("Deleted PDF:", deletedPdf);
 
     fetchPdfs();
   }
@@ -164,11 +162,11 @@ export default function App() {
   //openAI api call ref: https://dev.to/jehnz/integrating-openai-api-with-a-react-application-3378
   async function processText(text) {
     if (!text) {
-      console.error("No text extracted to process:", error)
+      console.error("No text extracted to process:");
       return;
     }
     // for testing purposes
-    const API_KEY = 'PLACEHOLDER';
+    const API_KEY = 'PLACEHOLD';
 
     try {
       const response = await axios.post(
@@ -219,6 +217,7 @@ export default function App() {
       setPdfSummary(parsedResponse.summary || "No summary available.");
       setParsedCategories(parsedResponse);
 
+      return parsedResponse;
     } catch (error) {
       console.error("Error processing OpenAI request:", error.response ? error.response.data : error.message);
     }
@@ -412,7 +411,17 @@ export default function App() {
                 </View>
                 <Flex direction="row" gap="1rem">
               <Button
-                onClick={() => window.open(pdf.pdfUrl, "_blank")}
+                onClick={() => {
+                  const sections = {
+                    partiesInvolved: pdf.partiesInvolved,
+                    keyClauses: pdf.keyClauses,
+                    datesAndTimelines: pdf.datesAndTimelines,
+                    obligationsAndLiabilities: pdf.obligationsAndLiabilities,
+                    summary: pdf.summary,
+                  }
+                  setParsedCategories(sections);
+                  setPdfSummary(pdf.summary);
+                }}
                 variation="primary"
               >
                 View

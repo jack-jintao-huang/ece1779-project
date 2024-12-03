@@ -6,6 +6,10 @@ const schema = a.schema({
       name: a.string(),
       pdfUrl: a.string(), // URL to the PDF file stored in S3
       summary: a.string(),
+      partiesInvolved: a.string(),
+      keyClauses: a.string(),
+      datesAndTimelines: a.string(),
+      obligrationsAndLiabilities: a.string(),
     })
     .authorization((allow) => [allow.owner()]),
 });
