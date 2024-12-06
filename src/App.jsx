@@ -35,7 +35,6 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs
 
 export default function App() {
   const [pdfs, setPdfs] = useState([]);
-  const [pdfSummary, setPdfSummary] = useState("");
   const [parsedCategories, setParsedCategories] = useState({
     partiesInvolved: "",
     keyClauses: "",
@@ -129,28 +128,26 @@ export default function App() {
 
     console.log("name: ", form.get("name"));
     console.log("pdfUrl: ", file.name);
-    console.log("summary: ", pdfSummary || "No summary generated.");
+    console.log("summary: ", parsed.summary || "No summary generated.");
     console.log("Parsed Parties Involved:", parsed.partiesInvolved);
     console.log("Parsed Key Clauses:", parsed.keyClauses);
     console.log("Parsed Dates and Timelines:", parsed.datesAndTimelines);
     console.log("Parsed Obligations and Liabilities:", parsed.obligationsAndLiabilities);
 
-    const { data: newPdf } = await client.models.Pdf.create({
+    const response = await client.models.Pdf.create({
       name: form.get("name"),
       pdfUrl: file.name,
-      summary: pdfSummary || "No summary generated.",
+      summary: parsed.summary || "No summary generated.",
       partiesInvolved: parsed.partiesInvolved || "No information available.",
       keyClauses: parsed.keyClauses || "No information available.",
       datesAndTimelines: parsed.datesAndTimelines || "No information available.",
       obligationsAndLiabilities: parsed.obligationsAndLiabilities || "No information available.",
     });
-
-    await uploadData({
-      path: ({ identityId }) => `pdf/${identityId}/${file.name}`,
-      data: file,
-    }).result;
-
-    console.log("New PDF:", newPdf);
+    
+    console.log("Response from create:", response);  // See what this logs
+    const { data: newPdf } = response;
+    console.log("New PDF:", newPdf);  // Check if newPdf is still null
+    
 
     fetchPdfs();
 
@@ -174,7 +171,7 @@ export default function App() {
       return;
     }
     // for testing purposes
-    const API_KEY = 'PLACEHOLD';
+    const API_KEY = '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';
 
     try {
       const response = await axios.post(
@@ -222,7 +219,6 @@ export default function App() {
 
       // parsed response
       const parsedResponse = parseResponse(modelResponse);
-      setPdfSummary(parsedResponse.summary || "No summary available.");
       setParsedCategories(parsedResponse);
 
       return parsedResponse;
@@ -354,7 +350,7 @@ export default function App() {
                 lineHeight: "1.6",
                 }}
               >
-                {pdfSummary}
+                {parsedCategories.summary}
             </View>
           </Flex>
 
@@ -428,7 +424,6 @@ export default function App() {
                     summary: pdf.summary,
                   }
                   setParsedCategories(sections);
-                  setPdfSummary(pdf.summary);
                 }}
                 variation="primary"
               >
