@@ -126,15 +126,7 @@ export default function App() {
 
     console.log("Parsed Categories:", parsed);
 
-    console.log("name: ", form.get("name"));
-    console.log("pdfUrl: ", file.name);
-    console.log("summary: ", parsed.summary || "No summary generated.");
-    console.log("Parsed Parties Involved:", parsed.partiesInvolved);
-    console.log("Parsed Key Clauses:", parsed.keyClauses);
-    console.log("Parsed Dates and Timelines:", parsed.datesAndTimelines);
-    console.log("Parsed Obligations and Liabilities:", parsed.obligationsAndLiabilities);
-
-    const response = await client.models.Pdf.create({
+    const {data: newPdf} = await client.models.Pdf.create({
       name: form.get("name"),
       pdfUrl: file.name,
       summary: parsed.summary || "No summary generated.",
@@ -144,10 +136,12 @@ export default function App() {
       obligationsAndLiabilities: parsed.obligationsAndLiabilities || "No information available.",
     });
     
-    console.log("Response from create:", response);  // See what this logs
-    const { data: newPdf } = response;
-    console.log("New PDF:", newPdf);  // Check if newPdf is still null
-    
+    await uploadData({
+      path: ({identityId}) => `pdf/${identityId}/${file.name}`,
+      data: file,
+    }).result;
+
+    console.log("Uploaded PDF:", newPdf);
 
     fetchPdfs();
 
