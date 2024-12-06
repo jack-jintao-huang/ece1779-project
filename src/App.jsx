@@ -127,6 +127,14 @@ export default function App() {
 
     console.log("Parsed Categories:", parsed);
 
+    console.log("name: ", form.get("name"));
+    console.log("pdfUrl: ", file.name);
+    console.log("summary: ", pdfSummary || "No summary generated.");
+    console.log("Parsed Parties Involved:", parsed.partiesInvolved);
+    console.log("Parsed Key Clauses:", parsed.keyClauses);
+    console.log("Parsed Dates and Timelines:", parsed.datesAndTimelines);
+    console.log("Parsed Obligations and Liabilities:", parsed.obligationsAndLiabilities);
+
     const { data: newPdf } = await client.models.Pdf.create({
       name: form.get("name"),
       pdfUrl: file.name,
@@ -140,7 +148,7 @@ export default function App() {
     await uploadData({
       path: ({ identityId }) => `pdf/${identityId}/${file.name}`,
       data: file,
-    });
+    }).result;
 
     console.log("New PDF:", newPdf);
 

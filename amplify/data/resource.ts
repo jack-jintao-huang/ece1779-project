@@ -9,7 +9,7 @@ const schema = a.schema({
       partiesInvolved: a.string(),
       keyClauses: a.string(),
       datesAndTimelines: a.string(),
-      obligrationsAndLiabilities: a.string(),
+      obligationsAndLiabilities: a.string(),
     })
     .authorization((allow) => [allow.owner()]),
 });
