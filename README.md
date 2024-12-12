@@ -1,18 +1,61 @@
-# React + Vite
+# FinePrint - Legal Contract Summarizer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Summary
 
-Currently, two official plugins are available:
+FinePrint is a tool designed to help users quickly understand the key points of lengthy legal contracts by providing concise summaries. It leverages AWS services and modern web technologies to deliver an efficient and user-friendly experience. This project involves setting up an AWS environment, installing necessary dependencies, and running a development server to test the application locally.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Setting Up the Project
 
-# local dev steps
-- set aws local env variables from dashbord using AdministratorAccess profile
-- follow through account set up here https://docs.amplify.aws/react/start/account-setup/, from step 3
-- terminal: aws configure sso (1st time login)
-- terminal: aws sso login (any other time)
-- terminal: npm install 
-- terminal: npx ampx sandbox
-- new terminal instance: npm run dev
-- use link for local update 
+### Prerequisites
+
+- AWS account  with `AmplifyBackendDeployFullAccess` IAM role. For detailed account setup, follow the instructions [here](https://docs.amplify.aws/react/start/account-setup/).
+- Node.js, npm, and AWS CLI installed
+
+### First time setup
+
+Deploy Application with AWS Amplify:
+
+1. Sign in to the AWS Management console in a new browser window, and open the AWS Amplify console at https://console.aws.amazon.com/amplify/apps.
+
+2. Choose Create new app. 
+
+3. On the Start building with Amplify page, for Deploy your app, select GitHub, and select Next.
+
+4. When prompted, authenticate with GitHub. You will be automatically redirected back to the Amplify console. Choose the repository and main branch you created earlier. Then select Next.
+
+5. Leave the default build settings, and select Next.
+
+6. Review the inputs selected, and choose Save and deploy.
+
+### Steps
+
+1. **Set AWS Local Environment Variables**
+    - Configure AWS CLI with SSO if this is the first time:
+      ```sh
+      aws configure sso
+      ```
+    - or Login to AWS SSO:
+      ```sh
+      aws sso login
+      ```
+
+2. **Install Dependencies**
+    ```sh
+    npm install
+    ```
+
+3. **Start Amplify Sandbox**
+    ```sh
+    npx ampx sandbox
+    ```
+
+4. **Run the Development Server**
+    - Open a new terminal instance:
+      ```sh
+      npm run dev
+      ```
+
+5. **Local Updates**
+    - Use the provided link for local updates.
+
+For detailed account setup, follow the instructions from step 3 in the [Amplify React setup guide](https://docs.amplify.aws/react/start/account-setup/).
